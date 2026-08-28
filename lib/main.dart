@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:news_app/screens/home_screen.dart';
+import 'package:news_app/screens/splash_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -91,10 +91,9 @@ class _MyAppState extends State<MyApp> {
         ),
       ),
 
-      home: HomeScreen(
+      home: SplashScreen(
         onThemeToggle: toggleTheme,
         isDarkMode: themeMode == ThemeMode.dark,
-      ),
-    );
+      ),    );
   }
 }
