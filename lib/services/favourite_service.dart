@@ -8,7 +8,7 @@ class FavoritesBox {
   static Box get box => Hive.box(boxName);
 
   static Future<void> toggleFavorite(NewsModel article) async {
-    final key = article.url;
+    final key = article.url?.trim();
 
     if (key == null || key.isEmpty) {
       return;
@@ -31,7 +31,7 @@ class FavoritesBox {
   }
 
   static bool isFavorite(NewsModel article) {
-    final key = article.url;
+    final key = article.url?.trim();
 
     if (key == null || key.isEmpty) {
       return false;
@@ -41,8 +41,8 @@ class FavoritesBox {
   }
 
   static List<NewsModel> getFavorites() {
-    return box.values.map((data) {
-      final Map<String, dynamic> article = Map<String, dynamic>.from(data);
+    return box.values.whereType<Map>().map((data) {
+      final article = Map<String, dynamic>.from(data);
 
       return NewsModel(
         sourceName: article['sourceName'],
@@ -55,5 +55,19 @@ class FavoritesBox {
         content: article['content'],
       );
     }).toList();
+  }
+
+  static Future<void> removeFavorite(NewsModel article) async {
+    final key = article.url?.trim();
+
+    if (key == null || key.isEmpty) {
+      return;
+    }
+
+    await box.delete(key);
+  }
+
+  static Future<void> clearFavorites() async {
+    await box.clear();
   }
 }

@@ -9,18 +9,16 @@ class NewsSkeleton extends StatefulWidget {
 
 class _NewsSkeletonState extends State<NewsSkeleton>
     with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
+  late final AnimationController _controller;
+  late final Animation<double> _animation;
 
   @override
   void initState() {
     super.initState();
-
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     )..repeat(reverse: true);
-
     _animation = Tween<double>(
       begin: 0.35,
       end: 0.75,
@@ -33,7 +31,7 @@ class _NewsSkeletonState extends State<NewsSkeleton>
     super.dispose();
   }
 
-  Widget skeletonBox({
+  Widget _skeletonBox({
     required double width,
     required double height,
     required Color color,
@@ -60,9 +58,7 @@ class _NewsSkeletonState extends State<NewsSkeleton>
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-
     final skeletonColor = colors.onSurface.withValues(alpha: 0.08);
-
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(12),
@@ -76,17 +72,13 @@ class _NewsSkeletonState extends State<NewsSkeleton>
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Image
-          skeletonBox(
+          _skeletonBox(
             width: 100,
             height: 100,
             color: skeletonColor,
             radius: 14,
           ),
-
           const SizedBox(width: 14),
-
-          // Content
           Expanded(
             child: SizedBox(
               height: 100,
@@ -94,38 +86,35 @@ class _NewsSkeletonState extends State<NewsSkeleton>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  skeletonBox(
+                  _skeletonBox(
                     width: 85,
                     height: 11,
                     color: skeletonColor,
                     radius: 5,
                   ),
-
-                  skeletonBox(
+                  _skeletonBox(
                     width: double.infinity,
                     height: 13,
                     color: skeletonColor,
                     radius: 5,
                   ),
-
-                  skeletonBox(
+                  _skeletonBox(
                     width: 170,
                     height: 13,
                     color: skeletonColor,
                     radius: 5,
                   ),
-
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      skeletonBox(
+                      _skeletonBox(
                         width: 22,
                         height: 22,
                         color: skeletonColor,
                         radius: 11,
                       ),
                       const SizedBox(width: 10),
-                      skeletonBox(
+                      _skeletonBox(
                         width: 22,
                         height: 22,
                         color: skeletonColor,

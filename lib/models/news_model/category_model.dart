@@ -17,37 +17,31 @@ class CategoryModel {
       value: 'general',
       icon: Icons.public_rounded,
     ),
-
     CategoryModel(
       name: 'Business',
       value: 'business',
       icon: Icons.business_center_rounded,
     ),
-
     CategoryModel(
       name: 'Entertainment',
       value: 'entertainment',
       icon: Icons.movie_rounded,
     ),
-
     CategoryModel(
       name: 'Health',
       value: 'health',
       icon: Icons.health_and_safety_rounded,
     ),
-
     CategoryModel(
       name: 'Science',
       value: 'science',
       icon: Icons.science_rounded,
     ),
-
     CategoryModel(
       name: 'Sports',
       value: 'sports',
       icon: Icons.sports_soccer_rounded,
     ),
-
     CategoryModel(
       name: 'Technology',
       value: 'technology',

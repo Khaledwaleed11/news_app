@@ -8,7 +8,7 @@ class NewsModel {
   final String? publishedAt;
   final String? content;
 
-  NewsModel({
+  const NewsModel({
     this.sourceName,
     this.author,
     this.title,
@@ -20,15 +20,16 @@ class NewsModel {
   });
 
   factory NewsModel.fromJson(Map<String, dynamic> json) {
+    final source = json['source'];
     return NewsModel(
-      sourceName: json['source']?['name'],
-      author: json['author'],
-      title: json['title'],
-      description: json['description'],
-      url: json['url'],
-      urlToImage: json['urlToImage'],
-      publishedAt: json['publishedAt'],
-      content: json['content'],
+      sourceName: source is Map ? source['name']?.toString() : null,
+      author: json['author']?.toString(),
+      title: json['title']?.toString(),
+      description: json['description']?.toString(),
+      url: json['url']?.toString(),
+      urlToImage: json['urlToImage']?.toString(),
+      publishedAt: json['publishedAt']?.toString(),
+      content: json['content']?.toString(),
     );
   }
 }

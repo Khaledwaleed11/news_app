@@ -7,9 +7,7 @@ class SearchButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-
+    final colors = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       child: Material(
@@ -21,11 +19,10 @@ class SearchButton extends StatelessWidget {
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: colors.primaryContainer.withValues(alpha: 0.4),
+              color: colors.primaryContainer.withValues(alpha: 0.40),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: colors.outlineVariant.withValues(alpha: 0.3),
-                width: 1,
+                color: colors.outlineVariant.withValues(alpha: 0.30),
               ),
             ),
             child: Icon(Icons.search_rounded, color: colors.primary, size: 22),

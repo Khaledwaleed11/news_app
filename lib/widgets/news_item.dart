@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+
 import '../models/news_model/news_model.dart';
 import '../screens/news_details_screen.dart';
 import '../services/favourite_service.dart';
@@ -17,63 +20,61 @@ class NewsItem extends StatefulWidget {
 
 class _NewsItemState extends State<NewsItem>
     with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
+  late final AnimationController _controller;
+  late final Animation<double> _fadeAnimation;
+  late final Animation<Offset> _slideAnimation;
+  Timer? _animationTimer;
 
   @override
   void initState() {
     super.initState();
-
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 500),
     );
-
     _fadeAnimation = CurvedAnimation(
       parent: _controller,
       curve: Curves.easeOut,
     );
-
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.08),
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
-
-    Future.delayed(Duration(milliseconds: 70 * widget.animationIndex), () {
-      if (mounted) {
-        _controller.forward();
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  Future<void> openNews() async {
-    final url = widget.article.url;
-
-    if (url == null || url.isEmpty) return;
-
-    final uri = Uri.tryParse(url);
-
-    if (uri == null) return;
-
-    try {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } catch (e) {
-      debugPrint('Error opening news: $e');
+    final delay = Duration(milliseconds: 70 * widget.animationIndex);
+    if (delay == Duration.zero) {
+      _controller.forward();
+    } else {
+      _animationTimer = Timer(delay, () {
+        if (mounted) {
+          _controller.forward();
+        }
+      });
     }
   }
 
+  Future<void> openNews() async {
+    final value = widget.article.url?.trim();
+    if (value == null || value.isEmpty) {
+      return;
+    }
+    final uri = Uri.tryParse(
+      value.startsWith('http://') || value.startsWith('https://')
+          ? value
+          : 'https://$value',
+    );
+    if (uri == null || uri.host.isEmpty) {
+      return;
+    }
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {}
+  }
+
   Future<void> shareNews() async {
-    final url = widget.article.url;
-
-    if (url == null || url.isEmpty) return;
-
+    final url = widget.article.url?.trim();
+    if (url == null || url.isEmpty) {
+      return;
+    }
     await SharePlus.instance.share(
       ShareParams(text: '${widget.article.title ?? 'News'}\n\n$url'),
     );
@@ -90,15 +91,12 @@ class _NewsItemState extends State<NewsItem>
 
   Future<void> toggleFavorite() async {
     await FavoritesBox.toggleFavorite(widget.article);
-
-    if (!mounted) return;
-
+    if (!mounted) {
+      return;
+    }
     setState(() {});
-
     final isFavorite = FavoritesBox.isFavorite(widget.article);
-
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
-
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         duration: const Duration(seconds: 1),
@@ -112,26 +110,21 @@ class _NewsItemState extends State<NewsItem>
   }
 
   String formatDate(String? date) {
-    if (date == null || date.isEmpty) {
+    if (date == null || date.trim().isEmpty) {
       return 'Recent';
     }
-
     try {
       final parsedDate = DateTime.parse(date);
       final difference = DateTime.now().difference(parsedDate);
-
       if (difference.inMinutes < 1) {
         return 'Just now';
       }
-
       if (difference.inHours < 1) {
         return '${difference.inMinutes}m ago';
       }
-
       if (difference.inHours < 24) {
         return '${difference.inHours}h ago';
       }
-
       return '${parsedDate.day}/${parsedDate.month}/${parsedDate.year}';
     } catch (_) {
       return 'Recent';
@@ -139,16 +132,19 @@ class _NewsItemState extends State<NewsItem>
   }
 
   @override
+  void dispose() {
+    _animationTimer?.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
+    final colors = Theme.of(context).colorScheme;
     final article = widget.article;
-
     final hasImage =
-        article.urlToImage != null && article.urlToImage!.isNotEmpty;
-
-    final bool isFavorite = FavoritesBox.isFavorite(article);
-
+        article.urlToImage != null && article.urlToImage!.trim().isNotEmpty;
+    final isFavorite = FavoritesBox.isFavorite(article);
     return FadeTransition(
       opacity: _fadeAnimation,
       child: SlideTransition(
@@ -201,13 +197,11 @@ class _NewsItemState extends State<NewsItem>
                                         if (loadingProgress == null) {
                                           return child;
                                         }
-
                                         return Container(
                                           color: colors.surfaceContainerHighest,
-                                          child: Center(
+                                          child: const Center(
                                             child: CircularProgressIndicator(
                                               strokeWidth: 2,
-                                              color: colors.primary,
                                             ),
                                           ),
                                         );
@@ -217,20 +211,17 @@ class _NewsItemState extends State<NewsItem>
                         ),
                       ),
                     ),
-
                     const SizedBox(width: 14),
-
                     Expanded(
                       child: SizedBox(
                         height: 108,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Source + Date
                             Row(
                               children: [
                                 if (article.sourceName != null &&
-                                    article.sourceName!.isNotEmpty)
+                                    article.sourceName!.trim().isNotEmpty)
                                   Expanded(
                                     child: Text(
                                       article.sourceName!.toUpperCase(),
@@ -243,18 +234,16 @@ class _NewsItemState extends State<NewsItem>
                                         color: colors.primary,
                                       ),
                                     ),
-                                  ),
-
+                                  )
+                                else
+                                  const Spacer(),
                                 const SizedBox(width: 6),
-
                                 Icon(
                                   Icons.access_time_rounded,
                                   size: 12,
                                   color: colors.onSurfaceVariant,
                                 ),
-
                                 const SizedBox(width: 4),
-
                                 Text(
                                   formatDate(article.publishedAt),
                                   style: TextStyle(
@@ -265,10 +254,7 @@ class _NewsItemState extends State<NewsItem>
                                 ),
                               ],
                             ),
-
                             const SizedBox(height: 8),
-
-                            // Title
                             Expanded(
                               child: Text(
                                 article.title ?? 'No title available',
@@ -282,10 +268,7 @@ class _NewsItemState extends State<NewsItem>
                                 ),
                               ),
                             ),
-
                             const SizedBox(height: 6),
-
-                            // Actions
                             Row(
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
@@ -298,31 +281,27 @@ class _NewsItemState extends State<NewsItem>
                                       : colors.onSurfaceVariant,
                                   onTap: toggleFavorite,
                                 ),
-
                                 const SizedBox(width: 4),
-
                                 _ActionButton(
                                   icon: Icons.share_outlined,
                                   color: colors.onSurfaceVariant,
                                   onTap: shareNews,
                                 ),
-
                                 const SizedBox(width: 4),
-
-                                Container(
-                                  width: 34,
-                                  height: 34,
-                                  decoration: BoxDecoration(
-                                    color: colors.primary,
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
+                                Material(
+                                  color: colors.primary,
+                                  borderRadius: BorderRadius.circular(12),
                                   child: InkWell(
-                                    borderRadius: BorderRadius.circular(12),
                                     onTap: openDetails,
-                                    child: Icon(
-                                      Icons.arrow_forward_rounded,
-                                      size: 18,
-                                      color: colors.onPrimary,
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: SizedBox(
+                                      width: 34,
+                                      height: 34,
+                                      child: Icon(
+                                        Icons.arrow_forward_rounded,
+                                        size: 18,
+                                        color: colors.onPrimary,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -344,7 +323,6 @@ class _NewsItemState extends State<NewsItem>
 
   Widget _buildImagePlaceholder(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-
     return Container(
       color: colors.surfaceContainerHighest,
       child: Center(

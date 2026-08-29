@@ -20,22 +20,21 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
-  late AnimationController _logoController;
-  late AnimationController _textController;
-  late AnimationController _backgroundController;
+  late final AnimationController _logoController;
+  late final AnimationController _textController;
+  late final AnimationController _backgroundController;
 
-  late Animation<double> _logoScale;
-  late Animation<double> _logoFade;
-  late Animation<Offset> _textSlide;
-  late Animation<double> _textFade;
+  late final Animation<double> _logoScale;
+  late final Animation<double> _logoFade;
+  late final Animation<Offset> _textSlide;
+  late final Animation<double> _textFade;
+
+  Timer? _textTimer;
+  Timer? _navigationTimer;
 
   @override
   void initState() {
     super.initState();
-
-    // ==========================================================
-    // LOGO ANIMATION
-    // ==========================================================
 
     _logoController = AnimationController(
       vsync: this,
@@ -49,83 +48,81 @@ class _SplashScreenState extends State<SplashScreen>
 
     _logoFade = CurvedAnimation(parent: _logoController, curve: Curves.easeOut);
 
-    // ==========================================================
-    // TEXT ANIMATION
-    // ==========================================================
-
     _textController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 700),
     );
 
-    _textSlide = Tween<Offset>(begin: const Offset(0, 0.4), end: Offset.zero)
+    _textSlide = Tween<Offset>(begin: const Offset(0, 0.40), end: Offset.zero)
         .animate(
           CurvedAnimation(parent: _textController, curve: Curves.easeOutCubic),
         );
 
     _textFade = CurvedAnimation(parent: _textController, curve: Curves.easeOut);
 
-    // ==========================================================
-    // BACKGROUND ANIMATION
-    // ==========================================================
-
     _backgroundController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 3),
     )..repeat(reverse: true);
 
-    // ==========================================================
-    // START ANIMATIONS
-    // ==========================================================
-
     _logoController.forward();
 
-    Future.delayed(const Duration(milliseconds: 350), () {
+    _textTimer = Timer(const Duration(milliseconds: 350), () {
       if (mounted) {
         _textController.forward();
       }
     });
 
-    // ==========================================================
-    // GO TO HOME
-    // ==========================================================
+    _navigationTimer = Timer(const Duration(milliseconds: 2400), _openHome);
+  }
 
-    Future.delayed(const Duration(milliseconds: 2400), () {
-      if (!mounted) return;
+  void _openHome() {
+    if (!mounted) {
+      return;
+    }
 
-      Navigator.of(context).pushReplacement(
-        PageRouteBuilder(
-          transitionDuration: const Duration(milliseconds: 600),
-          pageBuilder: (context, animation, secondaryAnimation) {
-            return HomeScreen(
-              onThemeToggle: widget.onThemeToggle,
-              isDarkMode: widget.isDarkMode,
-            );
-          },
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(
-              opacity: CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeOut,
-              ),
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 600),
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return HomeScreen(
+            onThemeToggle: widget.onThemeToggle,
+            isDarkMode: widget.isDarkMode,
+          );
+        },
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          final curve = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOutCubic,
+          );
+
+          return FadeTransition(
+            opacity: curve,
+            child: ScaleTransition(
+              scale: Tween<double>(begin: 0.98, end: 1.0).animate(curve),
               child: child,
-            );
-          },
-        ),
-      );
-    });
+            ),
+          );
+        },
+      ),
+    );
   }
 
   @override
   void dispose() {
+    _textTimer?.cancel();
+    _navigationTimer?.cancel();
+
     _logoController.dispose();
     _textController.dispose();
     _backgroundController.dispose();
+
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     final isDark = widget.isDarkMode;
 
     final backgroundStart = isDark
@@ -135,8 +132,6 @@ class _SplashScreenState extends State<SplashScreen>
     final backgroundEnd = isDark
         ? const Color(0xFF101827)
         : const Color(0xFFEAF2FF);
-
-    final primaryColor = Theme.of(context).colorScheme.primary;
 
     final mainTextColor = isDark ? Colors.white : const Color(0xFF111827);
 
@@ -162,37 +157,26 @@ class _SplashScreenState extends State<SplashScreen>
         child: SafeArea(
           child: Stack(
             children: [
-              // ==================================================
-              // DECORATIVE CIRCLES
-              // ==================================================
               Positioned(
                 top: -100,
                 right: -80,
                 child: _buildBlurCircle(
                   size: 240,
-                  color: primaryColor.withValues(alpha: isDark ? 0.10 : 0.08),
+                  color: colors.primary.withValues(alpha: isDark ? 0.10 : 0.08),
                 ),
               ),
-
               Positioned(
                 bottom: -120,
                 left: -90,
                 child: _buildBlurCircle(
                   size: 260,
-                  color: primaryColor.withValues(alpha: isDark ? 0.08 : 0.06),
+                  color: colors.primary.withValues(alpha: isDark ? 0.08 : 0.06),
                 ),
               ),
-
-              // ==================================================
-              // CENTER CONTENT
-              // ==================================================
               Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // ================================
-                    // LOGO
-                    // ================================
                     FadeTransition(
                       opacity: _logoFade,
                       child: ScaleTransition(
@@ -201,30 +185,25 @@ class _SplashScreenState extends State<SplashScreen>
                           width: 112,
                           height: 112,
                           decoration: BoxDecoration(
-                            color: primaryColor,
+                            color: colors.primary,
                             borderRadius: BorderRadius.circular(32),
                             boxShadow: [
                               BoxShadow(
-                                color: primaryColor.withValues(alpha: 0.28),
+                                color: colors.primary.withValues(alpha: 0.28),
                                 blurRadius: 30,
                                 offset: const Offset(0, 14),
                               ),
                             ],
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.newspaper_rounded,
                             size: 58,
-                            color: Colors.white,
+                            color: colors.onPrimary,
                           ),
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 28),
-
-                    // ================================
-                    // APP NAME
-                    // ================================
                     FadeTransition(
                       opacity: _textFade,
                       child: SlideTransition(
@@ -240,9 +219,7 @@ class _SplashScreenState extends State<SplashScreen>
                                 color: mainTextColor,
                               ),
                             ),
-
                             const SizedBox(height: 8),
-
                             Text(
                               'Stay informed. Stay ahead.',
                               style: TextStyle(
@@ -259,10 +236,6 @@ class _SplashScreenState extends State<SplashScreen>
                   ],
                 ),
               ),
-
-              // ==================================================
-              // BOTTOM
-              // ==================================================
               Positioned(
                 left: 0,
                 right: 0,
@@ -276,12 +249,10 @@ class _SplashScreenState extends State<SplashScreen>
                         height: 28,
                         child: CircularProgressIndicator(
                           strokeWidth: 2.5,
-                          color: primaryColor,
+                          color: colors.primary,
                         ),
                       ),
-
                       const SizedBox(height: 12),
-
                       Text(
                         'Loading latest stories...',
                         style: TextStyle(
